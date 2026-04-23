@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -35,19 +36,65 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        try {
+            // 1. Validasi Input (Status 422 - Unprocessable Entity)
+            // Memastikan email dan password tidak kosong saat dikirim
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'password' => 'required'
+            ]);
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal login. Pastikan format input benar.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // 2. Cek apakah Email ada di database (Status 404 - Not Found)
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email tidak terdaftar di sistem kami.'
+                ], 404);
+            }
+
+            // 3. Cek apakah Password cocok (Status 401 - Unauthorized)
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Password yang Anda masukkan salah.'
+                ], 401);
+            }
+
+            // 4. Jika semua benar, buat Token (Status 200 - OK)
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login berhasil.',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                    ],
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                ]
+            ], 200);
+
+        } catch (Exception $e) {
+            // 5. Tangkap error sistem atau database (Status 500 - Internal Server Error)
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan pada server kami.',
+                'error' => $e->getMessage() // Hapus baris ini saat aplikasi sudah rilis ke publik (Production)
+            ], 500);
         }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login success',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
     }
 
     public function logout(Request $request)
