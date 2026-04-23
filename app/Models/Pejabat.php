@@ -12,6 +12,7 @@ class Pejabat extends Model
         'email',
         'nama',
         'jabatan_sekarang',
+        'rundown',
         'tmt_jabatan'
     ];
 }

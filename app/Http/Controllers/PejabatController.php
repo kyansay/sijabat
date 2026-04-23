@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NotifKenaikanJabatan;
+use App\Models\EmailLog;
 use App\Models\Pejabat;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class PejabatController extends Controller
@@ -37,11 +40,13 @@ class PejabatController extends Controller
                 'id' => $p->id,
                 'nip' => $p->nip,
                 'nama' => $p->nama,
+                'email' => $p->email,
                 'jabatan' => $p->jabatan_sekarang,
                 'tmt' => $p->tmt_jabatan,
                 'lama_menjabat' => $lamaMenjabat,
+                'rundown' => $p->rundown,
                 'perlu_kenaikan' => $tahun >= 4,
-                'pesan' => $tahun >= 4 ? "Bersiap untuk kenaikan jabatan!" : "Masa jabatan aman."
+                'pesan' => $tahun >= 4 ? "Bersiap untuk kenaikan Pangkat!" : "Masa Pangkat aman."
             ];
         });
 
@@ -155,5 +160,57 @@ class PejabatController extends Controller
             'success' => true,
             'message' => 'Data Pejabat berhasil dihapus'
         ]);
+    }
+
+
+    public function sendManualWarning(Request $request, $id)
+    {
+        // 1. Cari pejabat berdasarkan ID
+        $pejabat = Pejabat::find($id);
+
+        if (!$pejabat) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pejabat tidak ditemukan.'
+            ], 404);
+        }
+
+        if (!$pejabat->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pejabat ini tidak memiliki alamat email.'
+            ], 422);
+        }
+
+        try {
+            // 2. Kirim email ke email pejabat tersebut
+            Mail::to($pejabat->email)->queue(new NotifKenaikanJabatan($pejabat));
+
+            // 3. Catat ke log dengan keterangan dikirim oleh Admin
+            EmailLog::create([
+                'pejabat_id' => $pejabat->id,
+                'email_tujuan' => $pejabat->email,
+                'status' => 'Berhasil',
+                'keterangan' => 'Dikirim secara manual oleh Admin: ' . auth()->user()->name
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email peringatan berhasil dikirim ke ' . $pejabat->nama
+            ]);
+
+        } catch (\Exception $e) {
+            EmailLog::create([
+                'pejabat_id' => $pejabat->id,
+                'email_tujuan' => $pejabat->email,
+                'status' => 'Gagal',
+                'keterangan' => 'Gagal kirim manual: ' . $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim email.'
+            ], 500);
+        }
     }
 }
