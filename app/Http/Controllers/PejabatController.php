@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\NotifKenaikanJabatan;
+use App\Mail\NotifKenaikanpangkat;
 use App\Models\EmailLog;
 use App\Models\Pejabat;
 use Carbon\Carbon;
@@ -20,7 +20,7 @@ class PejabatController extends Controller
         $pejabat = Pejabat::all();
 
         $data = $pejabat->map(function ($p) {
-            $tmt = Carbon::parse($p->tmt_jabatan);
+            $tmt = Carbon::parse($p->tmt_pangkat);
             $sekarang = Carbon::now();
 
             // Menggunakan diff untuk mendapatkan objek DateInterval
@@ -30,20 +30,20 @@ class PejabatController extends Controller
             $bulan = $diff->m; // Mengambil angka bulan
             $hari = $diff->d; // Mengambil angka hari (opsional)
 
-            // Menyusun string lama menjabat
-            // $lamaMenjabat = "{$tahun} Tahun {$bulan} Bulan";
+            // Menyusun string lama pangkat
+            // $lamapangkat = "{$tahun} Tahun {$bulan} Bulan";
 
             // Jika ingin menambahkan hari, gunakan:
-            $lamaMenjabat = "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
+            $lamapangkat = "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
 
             return [
                 'id' => $p->id,
                 'nip' => $p->nip,
                 'nama' => $p->nama,
                 'email' => $p->email,
-                'jabatan' => $p->jabatan_sekarang,
-                'tmt' => $p->tmt_jabatan,
-                'lama_menjabat' => $lamaMenjabat,
+                'pangkat' => $p->pangkat_sekarang,
+                'tmt' => $p->tmt_pangkat,
+                'lama_pangkat' => $lamapangkat,
                 'rundown' => $p->rundown,
                 'perlu_kenaikan' => $tahun >= 4,
                 'pesan' => $tahun >= 4 ? "Bersiap untuk kenaikan Pangkat!" : "Masa Pangkat aman."
@@ -52,7 +52,7 @@ class PejabatController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Daftar Masa Jabatan Pejabat',
+            'message' => 'Daftar Masa Pangkat Pejabat',
             'data' => $data
         ], 200);
     }
@@ -70,8 +70,8 @@ class PejabatController extends Controller
             'nip' => 'required|numeric|digits:18|unique:pejabats,nip',
             'email' => 'required|string|unique:pejabats,email',
             'nama' => 'required|string',
-            'jabatan_sekarang' => 'required|string',
-            'tmt_jabatan' => 'required|date',
+            'pangkat_sekarang' => 'required|string',
+            'tmt_pangkat' => 'required|date',
         ]);
 
         if ($validator->fails()) {
@@ -98,13 +98,13 @@ class PejabatController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan'], 404);
         }
 
-        $tmt = Carbon::parse($pejabat->tmt_jabatan);
+        $tmt = Carbon::parse($pejabat->tmt_pangkat);
         $diffYears = $tmt->diffInYears(now());
 
         return response()->json([
             'success' => true,
             'data' => array_merge($pejabat->toArray(), [
-                'lama_menjabat' => $diffYears . " Tahun",
+                'lama_pangkat' => $diffYears . " Tahun",
                 'perlu_kenaikan' => $diffYears >= 4,
             ])
         ]);
@@ -126,8 +126,8 @@ class PejabatController extends Controller
             'nip' => 'sometimes|numeric|digits:18|unique:pejabats,nip,' . $id,
             'email' => 'sometimes|string|unique:pejabats,email',
             'nama' => 'sometimes|string',
-            'jabatan_sekarang' => 'sometimes|string',
-            'tmt_jabatan' => 'sometimes|date',
+            'pangkat_sekarang' => 'sometimes|string',
+            'tmt_pangkat' => 'sometimes|date',
         ]);
 
         if ($validator->fails()) {
@@ -184,7 +184,7 @@ class PejabatController extends Controller
 
         try {
             // 2. Kirim email ke email pejabat tersebut
-            Mail::to($pejabat->email)->queue(new NotifKenaikanJabatan($pejabat));
+            Mail::to($pejabat->email)->queue(new NotifKenaikanpangkat($pejabat));
 
             // 3. Catat ke log dengan keterangan dikirim oleh Admin
             EmailLog::create([
