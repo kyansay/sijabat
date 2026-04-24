@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->string('nip')->unique();
             $table->string('nama');
-            $table->string('jabatan_sekarang');
-            $table->date('tmt_jabatan'); // Tanggal Mulai Terhitung
+            $table->string('pangkat_sekarang');
+            $table->date('tmt_pangkat'); // Tanggal Mulai Terhitung
             $table->timestamps();
         });
     }

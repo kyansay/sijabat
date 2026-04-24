@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('pejabats', function (Blueprint $table) {
-            $table->string('rundown')->nullable()->after('tmt_jabatan');
+            $table->string('rundown')->nullable()->after('tmt_pangkat');
         });
     }
 

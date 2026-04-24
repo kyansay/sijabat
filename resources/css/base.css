@@ -1,0 +1,33 @@
+:root {
+    --color-primary: #003d64;
+    --color-secondary: #F8D8A1;
+    --color-success: #28a745;
+    --color-danger: #dc3545;
+    --color-warning: #ffc107;
+    --color-light: #f8f9fa;
+    --color-dark: #212529;
+}
+
+
+.bg-primary {
+    background: var(--color-primary);
+}
+
+.bg-secondary {
+    background: var(--color-secondary);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+.text-secondary {
+    color: var(--color-secondary);
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+}

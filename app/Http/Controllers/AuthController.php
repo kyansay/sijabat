@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ResetPasswordMail;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -16,6 +21,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
+            'role' => 'string|in:user,admin|nullable'
         ]);
 
         if ($validator->fails()) {
@@ -26,6 +32,7 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'user',
         ]);
 
 
@@ -81,6 +88,7 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
+                        'role' => $user->role
                     ],
                     'access_token' => $token,
                     'token_type' => 'Bearer',
@@ -103,5 +111,71 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
+    }
+
+
+    public function forgotPassword(Request $request)
+    {
+        // Validasi input email
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        // Buat token acak (64 karakter)
+        $token = Str::random(64);
+
+        // Simpan token ke tabel bawaan Laravel (password_reset_tokens)
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            ['token' => $token, 'created_at' => Carbon::now()]
+        );
+
+        // Kirim email (gunakan antrean/queue agar cepat)
+        Mail::to($request->email)->queue(new ResetPasswordMail($token, $request->email));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Link reset password telah dikirim ke email Anda.'
+        ]);
+    }
+
+    /**
+     * 2. Fungsi Memproses Perubahan Password Baru
+     */
+    public function resetPassword(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|min:6' // Minimal 6 karakter
+        ]);
+
+        // Cek apakah token dan email cocok di database
+        $resetRecord = DB::table('password_reset_tokens')->where([
+            'email' => $request->email,
+            'token' => $request->token
+        ])->first();
+
+        if (!$resetRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token reset password tidak valid atau sudah kedaluwarsa.'
+            ], 400);
+        }
+
+        // Ganti password user di database
+        $user = User::where('email', $request->email)->first();
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        // Hapus token yang sudah terpakai demi keamanan
+        DB::table('password_reset_tokens')->where(['email' => $request->email])->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah. Silakan login dengan password baru.'
+        ]);
     }
 }
