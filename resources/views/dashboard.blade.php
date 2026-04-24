@@ -213,6 +213,54 @@
                     <td class="p-3">${rundown}</td>
                     <td class="p-3">${pesan}</td>
 >>>>>>> Stashed changes
+    try {
+        const response = await fetch(`http://192.168.1.143:8000/api/pejabat`, {
+            method : "GET", 
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const result = await response.json();
+        const data = result.data;
+
+        let aman = 0, bahaya = 0;
+        const tbody = document.querySelector("#data-tbody");
+        tbody.innerHTML = "";
+
+        data.forEach(item => {
+
+            // ✅ ambil data dari API
+            const nip = item.nip;
+            const nama = item.nama;
+            const pangkat = item.pangkat;
+            const lama = item.lama_pangkat;
+            const rundown = item.rundown ?? '-';
+            const pesan = item.pesan;
+
+            if (item.perlu_kenaikan) {
+                status = `<span class="bg-red-500 text-white px-3 py-1 rounded">Bahaya</span>`;
+                bahaya++;
+            } else {
+                status = `<span class="bg-green-500 text-white px-3 py-1 rounded">Aman</span>`;
+                aman++;
+            }
+
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${nip}</td>
+                    <td class="p-3">${nama}</td>
+
+                    <td class="p-3">
+                        <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            <i class="fas fa-medal"></i>
+                            ${pangkat}
+                        </span>
+                    </td>
+
+                    <td class="p-3">${lama}</td>
+                    <td class="p-3">${rundown}</td>
+                    <td class="p-3">${pesan}</td>
                 </tr>
             `;
                     });
