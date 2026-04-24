@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\NotifKenaikanpangkat;
+use App\Mail\NotifKenaikanJabatan;
 use App\Models\EmailLog;
 use App\Models\Pejabat;
 use Carbon\Carbon;
@@ -184,7 +184,7 @@ class PejabatController extends Controller
 
         try {
             // 2. Kirim email ke email pejabat tersebut
-            Mail::to($pejabat->email)->queue(new NotifKenaikanpangkat($pejabat));
+            Mail::to($pejabat->email)->queue(new NotifKenaikanJabatan($pejabat));
 
             // 3. Catat ke log dengan keterangan dikirim oleh Admin
             EmailLog::create([
