@@ -111,8 +111,32 @@
                         }
                     });
 
+<<<<<<< Updated upstream
                     const result = await response.json();
                     const data = result.data;
+=======
+        <table class="w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-id-card mr-2"></i>NIP</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-user mr-2"></i>Nama</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-medal mr-2"></i>Pangkat Sekarang</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-hourglass-end mr-2"></i>Lama Pangkat</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-clipboard-list mr-2"></i>Rundown</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-comment-dots mr-2"></i>Pesan</th>
+                </tr>
+            </thead>
+            <tbody id="data-tbody">
+                <tr>
+                    <td colspan="6" class="text-center p-6">
+                        <div class="w-8 h-8 border-4 border-gray-300 border-t-[#003d64] rounded-full mx-auto animate-spin mb-3"></div>
+                        <p class="text-[#003d64] font-semibold">Loading...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+>>>>>>> Stashed changes
 
                     let aman = 0,
                         bahaya = 0;
@@ -122,6 +146,7 @@
                     data.forEach(item => {
                         let status = '';
 
+<<<<<<< Updated upstream
                         if (item.perlu_kenaikan) {
                             status = `<span class="bg-red-500 text-white px-3 py-1 rounded">Bahaya</span>`;
                             bahaya++;
@@ -138,6 +163,56 @@
                     <td class="p-3">${item.pangkat_sekarang}</td>
                     <td class="p-3">${item.tmt_pangkat}</td>
                     <td class="p-3">${status}</td>
+=======
+    try {
+        const response = await fetch(`http://192.168.1.143:8000/api/pejabat`, {
+            method : "GET", 
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        const result = await response.json();
+        const data = result.data;
+
+        let aman = 0, bahaya = 0;
+        const tbody = document.querySelector("#data-tbody");
+        tbody.innerHTML = "";
+
+        data.forEach(item => {
+
+            // ✅ ambil data dari API
+            const nip = item.nip;
+            const nama = item.nama;
+            const pangkat = item.pangkat;
+            const lama = item.lama_pangkat;
+            const rundown = item.rundown ?? '-';
+            const pesan = item.pesan;
+
+            if (item.perlu_kenaikan) {
+                status = `<span class="bg-red-500 text-white px-3 py-1 rounded">Bahaya</span>`;
+                bahaya++;
+            } else {
+                status = `<span class="bg-green-500 text-white px-3 py-1 rounded">Aman</span>`;
+                aman++;
+            }
+
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3">${nip}</td>
+                    <td class="p-3">${nama}</td>
+
+                    <td class="p-3">
+                        <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            <i class="fas fa-medal"></i>
+                            ${pangkat}
+                        </span>
+                    </td>
+
+                    <td class="p-3">${lama}</td>
+                    <td class="p-3">${rundown}</td>
+                    <td class="p-3">${pesan}</td>
+>>>>>>> Stashed changes
                 </tr>
             `;
                     });
@@ -145,11 +220,19 @@
                     document.getElementById('count-aman').textContent = aman;
                     document.getElementById('count-bahaya').textContent = bahaya;
 
+<<<<<<< Updated upstream
                 } catch (error) {
                     console.error(error);
                 }
             });
         </script>
+=======
+    } catch (error) {
+        console.error("Error:", error);
+    }
+});
+</script>
+>>>>>>> Stashed changes
 
 </body>
 
