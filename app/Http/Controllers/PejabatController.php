@@ -6,7 +6,9 @@ use App\Mail\NotifKenaikanJabatan;
 use App\Models\EmailLog;
 use App\Models\Pejabat;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,46 +19,66 @@ class PejabatController extends Controller
      */
     public function index()
     {
-        $pejabat = Pejabat::all();
+        try {
+            $pejabat = Pejabat::all();
 
-        $data = $pejabat->map(function ($p) {
-            $tmt = Carbon::parse($p->tmt_pangkat);
-            $sekarang = Carbon::now();
+            // Skenario 1: Data kosong di database (Status 404)
+            if ($pejabat->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pejabat belum tersedia di database.',
+                    'data' => []
+                ], 404);
+            }
 
-            // Menggunakan diff untuk mendapatkan objek DateInterval
-            $diff = $tmt->diff($sekarang);
+            $data = $pejabat->map(function ($p) {
+                $tmt = Carbon::parse($p->tmt_pangkat);
+                $sekarang = Carbon::now();
 
-            $tahun = $diff->y; // Mengambil angka tahun
-            $bulan = $diff->m; // Mengambil angka bulan
-            $hari = $diff->d; // Mengambil angka hari (opsional)
+                // Menggunakan diff untuk mendapatkan objek DateInterval
+                $diff = $tmt->diff($sekarang);
 
-            // Menyusun string lama pangkat
-            // $lamapangkat = "{$tahun} Tahun {$bulan} Bulan";
+                $tahun = $diff->y; // Mengambil angka tahun
+                $bulan = $diff->m; // Mengambil angka bulan
+                $hari = $diff->d;  // Mengambil angka hari
 
-            // Jika ingin menambahkan hari, gunakan:
-            $lamapangkat = "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
+                $lamapangkat = "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
 
-            return [
-                'id' => $p->id,
-                'nip' => $p->nip,
-                'nama' => $p->nama,
-                'email' => $p->email,
-                'pangkat' => $p->pangkat_sekarang,
-                'tmt' => $p->tmt_pangkat,
-                'lama_pangkat' => $lamapangkat,
-                'rundown' => $p->rundown,
-                'perlu_kenaikan' => $tahun >= 4,
-                'pesan' => $tahun >= 4 ? "Bersiap untuk kenaikan Pangkat!" : "Masa Pangkat aman."
-            ];
-        });
+                return [
+                    'id' => $p->id,
+                    'nip' => $p->nip,
+                    'nama' => $p->nama,
+                    'email' => $p->email,
+                    'pangkat' => $p->pangkat_sekarang,
+                    'tmt' => $p->tmt_pangkat,
+                    'lama_pangkat' => $lamapangkat,
+                    'rundown' => $p->rundown,
+                    'perlu_kenaikan' => $tahun >= 4,
+                    'pesan' => $tahun >= 4 ? "Bersiap untuk kenaikan Pangkat!" : "Masa Pangkat aman."
+                ];
+            });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Daftar Masa Pangkat Pejabat',
-            'data' => $data
-        ], 200);
+            // Skenario 2: Berhasil diproses (Status 200)
+            return response()->json([
+                'success' => true,
+                'message' => 'Daftar Masa Pangkat Pejabat berhasil diambil.',
+                'data' => $data
+            ], 200);
+
+        } catch (Exception $e) {
+            // Mencatat error ke file log laravel.log agar mudah di-debug
+            Log::error('Error get data pejabat: ' . $e->getMessage());
+
+            // Skenario 3: Terjadi error pada sistem/server (Status 500)
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan pada server saat memproses data.',
+                // Opsional: Anda bisa mengirimkan $e->getMessage() untuk mempermudah debug saat development, 
+                // tapi sebaiknya disembunyikan saat production.
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-
     /**
      * SIMPAN DATA BARU
      */

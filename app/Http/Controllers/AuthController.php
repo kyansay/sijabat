@@ -90,7 +90,7 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'role' => $user->role
                     ],
-                    'access_token' => $token,
+                    'token' => $token,
                     'token_type' => 'Bearer',
                 ]
             ], 200);

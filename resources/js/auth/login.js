@@ -39,9 +39,10 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
             const data = await response.json();
+            console.log(data);
 
             if (response.ok) {
-                localStorage.setItem("token", data.token);
+                localStorage.setItem("token", data.data.token);
 
                 Swal.fire({
                     icon: "success",
