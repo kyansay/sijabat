@@ -1,136 +1,96 @@
 <!DOCTYPE html>
-
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJABAT - Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f7fb;
-            margin: 0;
-        }
-        
-    .container {
-        width: 90%;
-        margin: 20px auto;
-    }
 
-    h1 {
-        color: #2c3e50;
-    }
+    <!-- Tailwind dari Vite -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    /* CARD DASHBOARD */
-    .cards {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
 
-    .card {
-        flex: 1;
-        padding: 20px;
-        border-radius: 12px;
-        color: white;
-    }
-
-    .aman { background: #3498db; }
-    .kritis { background: #f1c40f; color: #333; }
-    .bahaya { background: #e74c3c; }
-
-    /* TABLE */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    th, td {
-        padding: 12px;
-        text-align: left;
-    }
-
-    th {
-        background: #2c3e50;
-        color: white;
-    }
-
-    tr:nth-child(even) {
-        background: #f9f9f9;
-    }
-
-    /* STATUS BADGE */
-    .badge {
-        padding: 6px 10px;
-        border-radius: 8px;
-        color: white;
-        font-size: 12px;
-    }
-
-    .badge-aman { background: #3498db; }
-    .badge-kritis { background: #f1c40f; color: black; }
-    .badge-bahaya { background: #e74c3c; }
-
-    /* COUNTDOWN */
-    .countdown {
-        font-weight: bold;
-        color: #2c3e50;
-    }
-
-    /* RESPONSIVE */
-    @media(max-width: 768px) {
-        .cards {
-            flex-direction: column;
-        }
-    }
-</style>
-
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="relative min-h-screen">
 
-<div class="container">
-    <h1>📊 SIJABAT Dashboard</h1>
+    <!-- Background Image (PASTI MUNCUL) -->
+    <div class="absolute inset-0">
+        <img src="/images/kantor.jpeg" class="w-full h-full object-cover">
+    </div>
 
-<!-- CARDS -->
-<div class="cards">
-    <div class="card aman">
-        <h3>Zona Aman</h3>
-        <p>12 Orang</p>
-    </div>
-    <div class="card kritis">
-        <h3>Masa Kritis</h3>
-        <p>5 Orang</p>
-    </div>
-    <div class="card bahaya">
-        <h3>Wajib Peninjauan</h3>
-        <p>3 Orang</p>
+    <!-- Overlay (dibikin lebih transparan) -->
+    <div class="absolute inset-0 bg-blue-900/40"></div>
+
+    <!-- Content -->
+    <div class="relative z-10">
+
+<!-- HEADER -->
+<div class="bg-[#003d64]/80 backdrop-blur-md text-white py-12 px-4 shadow-lg">
+    <div class="max-w-6xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-3">
+            <i class="fas fa-passport mr-3"></i>SIJABAT
+        </h1>
+        <p class="text-lg opacity-95">Sistem Informasi Pangkat - Dashboard Monitoring</p>
     </div>
 </div>
 
-<!-- TABLE -->
-<table>
-    <thead>
-        <tr>
-            <th>Nip</th>
-            <th>Nama</th>
-            <th>Email</th>
-            <th>Jabatan Sekarang</th>
-            <th>TMT</th>
-            <th>Status</th>
-            <th>Countdown</th>
-        </tr>
-    </thead>
-    <tbody>
-       <script>
+<!-- MAIN -->
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-[#003d64]">
+            <h3 class="font-bold mb-2 text-[#003d64]">Zona Aman</h3>
+            <p id="count-aman" class="text-4xl font-bold text-[#003d64]">0</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
+            <h3 class="font-bold mb-2 text-[#003d64]">Masa Kritis</h3>
+            <p id="count-kritis" class="text-4xl font-bold text-yellow-600">0</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
+            <h3 class="font-bold mb-2 text-[#003d64]">Wajib Peninjauan</h3>
+            <p id="count-bahaya" class="text-4xl font-bold text-red-600">0</p>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-[#003d64] text-white p-4">
+            <h2 class="text-xl font-bold"><i class="fas fa-table mr-2"></i>Data Pejabat</h2>
+        </div>
+
+        <table class="w-full">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-id-card mr-2"></i>NIP</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-user mr-2"></i>Nama</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-envelope mr-2"></i>Email</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-badge mr-2"></i>Pangkat Sekarang</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-calendar mr-2"></i>TMT</th>
+                    <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-hourglass-end mr-2"></i>Status</th>
+                </tr>
+            </thead>
+            <tbody id="data-tbody">
+                <tr>
+                    <td colspan="6" class="text-center p-6">
+                        <div class="w-8 h-8 border-4 border-gray-300 border-t-[#003d64] rounded-full mx-auto animate-spin mb-3"></div>
+                        <p class="text-[#003d64] font-semibold">Loading...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
 document.addEventListener("DOMContentLoaded", async function () {
     const token = localStorage.getItem("token");
-
-    // if (!token) {
-    //     window.location.href = "/login";
-    //     return;
-    // }
 
     try {
         const response = await fetch("http://192.168.1.143:8000/api/pejabats", {
@@ -140,49 +100,44 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         });
 
-        if (!response.ok) {
-            localStorage.removeItem("token");
-            return;
-        }
-
         const result = await response.json();
         const data = result.data;
 
-        // tampilkan ke tabel
-        const tbody = document.querySelector("tbody");
+        let aman = 0, bahaya = 0;
+        const tbody = document.querySelector("#data-tbody");
         tbody.innerHTML = "";
 
         data.forEach(item => {
-            let statusClass = '';
+            let status = '';
+
             if (item.perlu_kenaikan) {
-                statusClass = 'badge-bahaya';
+                status = `<span class="bg-red-500 text-white px-3 py-1 rounded">Bahaya</span>`;
+                bahaya++;
             } else {
-                statusClass = 'badge-aman';
+                status = `<span class="bg-green-500 text-white px-3 py-1 rounded">Aman</span>`;
+                aman++;
             }
 
             tbody.innerHTML += `
-                <tr>
-                    <td>${item.nip}</td>
-                    <td>${item.nama}</td>
-                    td>${item.email}</td>
-                    <td>${item.jabatan}</td>
-                    <td>${item.tmt}</td>
-                    <td><span class="badge ${statusClass}">${item.pesan}</span></td>
-                    <td>${item.lama_menjabat}</td>
+                <tr class="border-b">
+                    <td class="p-3">${item.nip}</td>
+                    <td class="p-3">${item.nama}</td>
+                    <td class="p-3">${item.email}</td>
+                    <td class="p-3">${item.pangkat_sekarang}</td>
+                    <td class="p-3">${item.tmt_pangkat}</td>
+                    <td class="p-3">${status}</td>
                 </tr>
             `;
         });
 
+        document.getElementById('count-aman').textContent = aman;
+        document.getElementById('count-bahaya').textContent = bahaya;
+
     } catch (error) {
         console.error(error);
-        window.location.href = "/login";
     }
 });
 </script>
-    </tbody>
-</table>
-
-</div>
 
 </body>
 </html>

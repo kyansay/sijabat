@@ -11,8 +11,8 @@ class Pejabat extends Model
         'nip',
         'email',
         'nama',
-        'jabatan_sekarang',
+        'pangkat_sekarang',
         'rundown',
-        'tmt_jabatan'
+        'tmt_pangkat'
     ];
 }
