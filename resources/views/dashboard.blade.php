@@ -28,7 +28,7 @@
     <div class="relative z-10">
 
         <!-- HEADER -->
-        <div class="bg-[#003d64]/80 backdrop-blur-md text-white py-12 px-4 shadow-lg">
+        <div class="bg-[#003d64]/80 backdrop-blur-md text-white py-8 px-4 shadow-lg">
             <div class="max-w-6xl mx-auto text-center">
                 <h1 class="text-4xl md:text-5xl font-bold mb-3">
                     <i class="fas fa-passport mr-3"></i>SIJABAT
