@@ -74,7 +74,7 @@
                     </h2>
                         <h2 class="text-xl font-bold flex items-center gap-2" onclick="" style="cursor: hand;">
                             <i class="fas fa-plus"></i>
-                            Tambah Pejabat
+                            Tambah Pejabatp
                         </h2>
                    
                 </div>
