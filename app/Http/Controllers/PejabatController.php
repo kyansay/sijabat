@@ -235,4 +235,76 @@ class PejabatController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * KIRIM EMAIL NOTIFIKASI KENAIKAN JABATAN
+     * Route: POST /api/kirim-email
+     */
+    public function kirimEmail(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nip' => 'required|string',
+            'email' => 'required|email'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            // Cari pejabat berdasarkan NIP
+            $pejabat = Pejabat::where('nip', $request->nip)->first();
+
+            if (!$pejabat) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pejabat tidak ditemukan.'
+                ], 404);
+            }
+
+            if (!$pejabat->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pejabat ini tidak memiliki alamat email.'
+                ], 422);
+            }
+
+            // Kirim email langsung ke pejabat
+            Mail::to($pejabat->email)->send(new NotifKenaikanJabatan($pejabat));
+
+            // Catat ke log dengan keterangan dikirim oleh Admin
+            EmailLog::create([
+                'pejabat_id' => $pejabat->id,
+                'email_tujuan' => $pejabat->email,
+                'status' => 'Berhasil',
+                'keterangan' => 'Dikirim dari Dashboard oleh: ' . (auth()->user()->name ?? 'System')
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email peringatan berhasil dikirim ke ' . $pejabat->nama
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Error kirim email: ' . $e->getMessage());
+
+            if ($pejabat) {
+                EmailLog::create([
+                    'pejabat_id' => $pejabat->id,
+                    'email_tujuan' => $pejabat->email,
+                    'status' => 'Gagal',
+                    'keterangan' => 'Gagal kirim dari dashboard: ' . $e->getMessage()
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

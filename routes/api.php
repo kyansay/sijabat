@@ -29,9 +29,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pengiriman Email Peringatan Manual
     Route::post('/pejabat/{id}/send-warning', [PejabatController::class, 'sendManualWarning']);
 
+    // Pengiriman Email dari Dashboard
+    Route::post('/kirim-email', [PejabatController::class, 'kirimEmail']);
+
     // Menampilkan Riwayat Log Penyiaran Email
     Route::get('/email-logs', function () {
-        $logs = EmailLog::with('pejabat:id,nama,jabatan_sekarang')
+        $logs = EmailLog::with('pejabat:id,nama,pangkat_sekarang')
             ->orderBy('created_at', 'desc')
             ->get();
 
