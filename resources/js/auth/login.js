@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     timer: 2000,
                     showConfirmButton: false,
                 }).then(() => {
-                    window.location.href = "/dashboard";
+                    window.location.href = "/admin/dashboard";
                 });
             } else {
                 Swal.fire({

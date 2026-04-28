@@ -9,8 +9,8 @@
 
 Berdasarkan basis data kepegawaian kami, masa pangkat/jabatan Bapak/Ibu saat ini telah memasuki periode peninjauan (genap 4 tahun). Berikut adalah rincian data kepegawaian Bapak/Ibu:
 
-* **Jabatan Saat Ini** : {{ $pejabat->jabatan_sekarang }}
-* **Terhitung Mulai Tanggal Pelantikan** : {{ \Carbon\Carbon::parse($pejabat->tmt_jabatan)->translatedFormat('d F Y') }}
+* **Pangkat Saat Ini** : {{ $pejabat->pangkat_sekarang }}
+* **Terhitung Mulai Tanggal Pelantikan** : {{ \Carbon\Carbon::parse($pejabat->tmt_pangkat)->translatedFormat('d F Y') }}
 
 Sehubungan dengan hal tersebut, kami mengimbau Bapak/Ibu untuk mulai mempersiapkan kelengkapan dokumen dan persyaratan administratif yang diperlukan untuk proses usulan kenaikan pangkat/jabatan periode berikutnya.
 
