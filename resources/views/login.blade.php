@@ -25,7 +25,7 @@
 
                 <div class="bg-white/40 p-8">
                     <div class="mb-2 items-center justify-center text-center">
-                        <img src="images/Logo with Text.png" alt="logo Imigrasi"
+                        <img src="images/logo-imigrasi.png" alt="logo Imigrasi"
                             class=" h-auto item-center content-center mx-auto">
                         <h3 class="text-xl font-semibold text-black ">Selamat Datang</h3>
                         <p class="text-md text-black font-semibold">Silakan masuk ke akun Anda</p>
