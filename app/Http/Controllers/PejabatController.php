@@ -206,7 +206,7 @@ class PejabatController extends Controller
 
         try {
             // 2. Kirim email ke email pejabat tersebut
-            Mail::to($pejabat->email)->queue(new NotifKenaikanJabatan($pejabat));
+            Mail::to($pejabat->email)->send(new NotifKenaikanJabatan($pejabat));
 
             // 3. Catat ke log dengan keterangan dikirim oleh Admin
             EmailLog::create([
@@ -231,7 +231,7 @@ class PejabatController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengirim email.'
+                'message' => 'Gagal mengirim email. ' . $e->getMessage()
             ], 500);
         }
     }
