@@ -1,6 +1,6 @@
 <x-mail::message>
 <div style="text-align: center;">
-<img src="{{ $message->embed(public_path('images/logo-imigrasi.png')) }}" width="100" alt="Logo Imigrasi">
+<img src="{{ $message->embed(public_path('images/logo-imigrasi.png')) }}" class="w-full" alt="Logo Imigrasi">
 </div>
 
 # Pemberitahuan Masa Peninjauan Pangkat/Jabatan

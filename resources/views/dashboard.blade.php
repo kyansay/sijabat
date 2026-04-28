@@ -61,39 +61,42 @@
             </div>
 
             <!-- TABLE -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="bg-[#003d64] text-white p-4">
-                    <h2 class="text-xl font-bold"><i class="fas fa-table mr-2"></i>Data Pejabat</h2>
-                </div>
+            <!-- TABLE -->
+<div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div class="bg-[#003d64] text-white px-4 py-3">
+        <h2 class="text-xl font-bold">
+            <i class="fas fa-table mr-2"></i>Data Pejabat
+        </h2>
+    </div>
 
-                <table class="w-full">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-id-card mr-2"></i>NIP
-                            </th>
-                            <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-user mr-2"></i>Nama</th>
-                            <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-envelope mr-2"></i>Email
-                            </th>
-                            <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-badge mr-2"></i>Pangkat
-                                Sekarang</th>
-                            <th class="p-3 text-left text-[#003d64] font-bold"><i class="fas fa-calendar mr-2"></i>TMT
-                            </th>
-                            <th class="p-3 text-left text-[#003d64] font-bold"><i
-                                    class="fas fa-hourglass-end mr-2"></i>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-tbody">
-                        <tr>
-                            <td colspan="6" class="text-center p-6">
-                                <div
-                                    class="w-8 h-8 border-4 border-gray-300 border-t-[#003d64] rounded-full mx-auto animate-spin mb-3">
-                                </div>
-                                <p class="text-[#003d64] font-semibold">Loading...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- Responsive Wrapper -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left">
+            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr>
+                    <th class="px-4 py-3">NIP</th>
+                    <th class="px-4 py-3">Nama</th>
+                    <th class="px-4 py-3">Email</th>
+                    <th class="px-4 py-3">Pangkat</th>
+                    <th class="px-4 py-3">TMT</th>
+                    <th class="px-4 py-3">Sisa Waktu</th>
+                    <th class="px-4 py-3 text-center">Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="data-tbody" class="divide-y">
+                <tr>
+                    <td colspan="7" class="text-center py-6">
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-8 h-8 border-4 border-gray-300 border-t-[#003d64] rounded-full animate-spin"></div>
+                            <p class="text-[#003d64] font-semibold">Loading...</p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
         </div>
 
@@ -132,6 +135,7 @@
 
                         const nip = item.nip;
                         const nama = item.nama;
+                        const email = item.email;
                         const pangkat = item.pangkat;
                         const lama = item.lama_pangkat;
                         const rundown = item.rundown ?? '-';
@@ -151,10 +155,11 @@
                     <td class="p-3">${nama}</td>
                     <td class="p-3">
                         <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                            <i class="fas fa-medal"></i>
-                            ${pangkat}
+                            
+                            ${email}
                         </span>
                     </td>
+                    <td class="p-3 ">${pangkat}</td>
                     <td class="p-3">${lama}</td>
                     <td class="p-3">${rundown}</td>
                     <td class="p-3">${pesan}</td>
