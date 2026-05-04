@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     <td class="p-3 text-sm">${lama}</td>
                     <td class="p-3 text-sm">${status}</td>
                     <td class="p-3">
-                        <button onclick="sendEmail('${id}', '${nama}', '${email}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-semibold transition-colors inline-flex items-center gap-2 text-sm">
+                        <button onclick="sendEmail(event, '${id}', '${nama}', '${email}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-semibold transition-colors inline-flex items-center gap-2 text-sm">
                             <i class="fas fa-envelope"></i>
                             Kirim Email
                         </button>
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 // Fungsi untuk mengirim email
-async function sendEmail(id, nama, email) {
+window.sendEmail = async function (event, id, nama, email) {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -108,7 +108,6 @@ async function sendEmail(id, nama, email) {
 
     const btn = event.target.closest("button");
     const originalContent = btn.innerHTML;
-
     // 🔥 Confirm
     const confirmResult = await Swal.fire({
         title: "Kirim Email?",
@@ -194,4 +193,4 @@ async function sendEmail(id, nama, email) {
         btn.innerHTML = originalContent;
         btn.disabled = false;
     }
-}
+};
