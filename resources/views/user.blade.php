@@ -7,7 +7,7 @@
     <title>SIJABAT - Dashboard</title>
 
     <!-- Tailwind dari Vite -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/user.js'])
 
 
     <!-- Font Awesome -->
@@ -41,69 +41,53 @@
         <div class="max-w-6xl mx-auto px-4 py-8">
 
             <!-- CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
-                <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-[#003d64]">
-                    <h3 class="font-bold mb-2 text-[#003d64]">Zona Aman</h3>
-                    <p id="count-aman" class="text-4xl font-bold text-[#003d64]">0</p>
+
+            <!-- TABLE -->
+            <!-- TABLE -->
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="bg-[#003d64] text-white px-4 py-3">
+                    <h2 class="text-xl font-bold">
+                        <i class="fas fa-table mr-2"></i>Data Pejabat
+                    </h2>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-yellow-500">
-                    <h3 class="font-bold mb-2 text-[#003d64]">Masa Kritis</h3>
-                    <p id="count-kritis" class="text-4xl font-bold text-yellow-600">0</p>
-                </div>
+                <!-- Responsive Wrapper -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3">NIP</th>
+                                <th class="px-4 py-3">Nama</th>
+                                <th class="px-4 py-3">Email</th>
+                                <th class="px-4 py-3">Pangkat</th>
+                                <th class="px-4 py-3">TMT</th>
+                                <th class="px-4 py-3">Sisa Waktu</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                            </tr>
+                        </thead>
 
-                <div class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
-                    <h3 class="font-bold mb-2 text-[#003d64]">Wajib Peninjauan</h3>
-                    <p id="count-bahaya" class="text-4xl font-bold text-red-600">0</p>
+                        <tbody id="data-tbody" class="divide-y">
+                            <tr>
+                                <td colspan="7" class="text-center py-6">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div
+                                            class="w-8 h-8 border-4 border-gray-300 border-t-[#003d64] rounded-full animate-spin">
+                                        </div>
+                                        <p class="text-[#003d64] font-semibold">Loading...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
             </div>
-
-            <!-- TABLE -->
-            <!-- TABLE -->
-<div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-    <div class="bg-[#003d64] text-white px-4 py-3">
-        <h2 class="text-xl font-bold">
-            <i class="fas fa-table mr-2"></i>Data Pejabat
-        </h2>
-    </div>
-
-    <!-- Responsive Wrapper -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm text-left">
-            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                <tr>
-                    <th class="px-4 py-3">NIP</th>
-                    <th class="px-4 py-3">Nama</th>
-                    <th class="px-4 py-3">Email</th>
-                    <th class="px-4 py-3">Pangkat</th>
-                    <th class="px-4 py-3">TMT</th>
-                    <th class="px-4 py-3">Sisa Waktu</th>
-                    <th class="px-4 py-3 text-center">Status</th>
-                </tr>
-            </thead>
-
-            <tbody id="data-tbody" class="divide-y">
-                <tr>
-                    <td colspan="7" class="text-center py-6">
-                        <div class="flex flex-col items-center gap-2">
-                            <div class="w-8 h-8 border-4 border-gray-300 border-t-[#003d64] rounded-full animate-spin"></div>
-                            <p class="text-[#003d64] font-semibold">Loading...</p>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
 
         </div>
 
         <script>
             document.addEventListener("DOMContentLoaded", async function() {
                 const token = localStorage.getItem("token");
-                console.log("Token:", token);
 
                 if (!token) {
                     alert("Token tidak ditemukan, silakan login ulang");
@@ -121,29 +105,39 @@
                     });
 
                     const result = await response.json();
-                    console.log("Response:", result);
 
-                    const data = result.data;
+                    if (!response.ok) {
+                        throw new Error(result.message || "Gagal mengambil data");
+                    }
 
-                    let aman = 0,
-                        bahaya = 0;
+                    const data = result.data || [];
+
+                    let aman = 0;
+                    let kritis = 0;
+                    let bahaya = 0;
+
                     const tbody = document.querySelector("#data-tbody");
                     tbody.innerHTML = "";
 
                     data.forEach(item => {
-                        let status = "";
 
                         const nip = item.nip;
                         const nama = item.nama;
-                        const email = item.email;
+                        const email = item.email ?? "-";
                         const pangkat = item.pangkat;
                         const lama = item.lama_pangkat;
-                        const rundown = item.rundown ?? '-';
-                        const pesan = item.pesan;
+                        const rundown = item.rundown ?? "-";
 
+                        let status = "";
+
+                        // 🔥 LOGIC STATUS 3 LEVEL
                         if (item.perlu_kenaikan) {
                             status = `<span class="bg-red-500 text-white px-3 py-1 rounded">Bahaya</span>`;
                             bahaya++;
+                        } else if (item.rundown && item.rundown <= 6) {
+                            status =
+                                `<span class="bg-yellow-500 text-white px-3 py-1 rounded">Kritis</span>`;
+                            kritis++;
                         } else {
                             status = `<span class="bg-green-500 text-white px-3 py-1 rounded">Aman</span>`;
                             aman++;
@@ -154,24 +148,30 @@
                     <td class="p-3">${nip}</td>
                     <td class="p-3">${nama}</td>
                     <td class="p-3">
-                        <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                            
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
                             ${email}
                         </span>
                     </td>
-                    <td class="p-3 ">${pangkat}</td>
+                    <td class="p-3">${pangkat}</td>
                     <td class="p-3">${lama}</td>
                     <td class="p-3">${rundown}</td>
-                    <td class="p-3">${pesan}</td>
+                    <td class="p-3 text-center">${status}</td>
                 </tr>
             `;
                     });
 
-                    document.getElementById('count-aman').textContent = aman;
-                    document.getElementById('count-bahaya').textContent = bahaya;
+
 
                 } catch (error) {
                     console.error("Error:", error);
+
+                    document.querySelector("#data-tbody").innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-6 text-red-600">
+                    ${error.message}
+                </td>
+            </tr>
+        `;
                 }
             });
         </script>
