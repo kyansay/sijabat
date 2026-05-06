@@ -41,7 +41,7 @@
         </header>
 
         <!-- MAIN -->
-        <main class="max-w-6xl mx-auto px-4 py-20 mt-6">
+        <main class="max-w-6xl mx-auto px-4 py-20 mt-6 flex flex-col ">
 
             <!-- CARDS -->
             <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
@@ -63,7 +63,11 @@
                 </div>
 
             </section>
+            <div class="flex justify-end ">
 
+                <input id="search-input" type="text" placeholder="Cari nama / NIP..."
+                    class="w-full md:w-1/3 px-4 py-2  rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4 bg-white" />
+            </div>
             <!-- TABLE -->
             <section class="bg-white rounded-2xl shadow-lg overflow-hidden">
 
@@ -73,11 +77,11 @@
                         <i class="fas fa-table"></i>
                         Data Pejabat
                     </h2>
-                    <h2 class="text-xl font-bold flex items-center gap-2" onclick="" style="cursor: hand;">
-                        <i class="fas fa-plus"></i>
-                        Tambah Pejabat
-                    </h2>
 
+                    <h2 id="btn-tambah" class="text-xl font-bold flex items-center gap-2 cursor-pointer">
+                        <i class="fas fa-plus mr-4"></i>
+                        Tambah
+                    </h2>
                 </div>
 
                 <table class="w-full text-center">
@@ -136,7 +140,8 @@
                     </tbody>
 
                 </table>
-
+                <!-- Letakkan ini tepat di bawah tag </table> milikmu -->
+                <div id="pagination-container" class="flex justify-center gap-2 mt-6"></div>
             </section>
 
         </main>
@@ -146,7 +151,3 @@
 </body>
 
 </html>
-
-
-
-

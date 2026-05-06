@@ -1,196 +1,176 @@
-document.addEventListener("DOMContentLoaded", async function () {
-    const token = localStorage.getItem("token");
-    console.log("Token:", token);
+import { deletePejabat, fetchPejabat } from "./api";
+import { renderTable, updateSummary, showError } from "./ui";
+import { initEvents } from "./events";
 
-    if (!token) {
-        alert("Token tidak ditemukan, silakan login ulang");
-        window.location.href = "/";
-        return;
+// 🔥 State Global untuk Module
+export let pejabatData = [];
+export let filteredData = []; // Menyimpan data hasil pencarian/filter
+export let currentPage = 1;
+export const itemsPerPage = 5;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    initEvents();
+    const token = localStorage.getItem("token");
+
+    // 🔥 Perketat pengecekan: antisipasi string "null" atau "undefined"
+    if (!token || token === "null" || token === "undefined") {
+        // Opsional: Tampilkan SweetAlert sejenak lalu redirect otomatis
+        await Swal.fire({
+            icon: "warning",
+            title: "Sesi Habis",
+            text: "Silakan login terlebih dahulu.",
+            timer: 5000, // Popup akan hilang otomatis dalam 1,5 detik
+            showConfirmButton: false,
+            allowOutsideClick: false,
+        }).then(() => {
+            // 🔥 Gunakan replace() agar user tidak bisa menekan tombol 'Back' ke halaman ini
+            window.location.replace("/");
+        });
+
+        return; // Hentikan eksekusi script di bawahnya
     }
 
     try {
-        const response = await fetch("http://192.168.1.143:8000/api/pejabat", {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-        });
+        const data = await fetchPejabat(token);
+        pejabatData = data;
+        filteredData = data; // Awalnya, data filter sama dengan semua data
 
-        const result = await response.json();
-        console.log("Response:", result);
-
-        if (!response.ok) {
-            throw new Error(result.message || "Gagal mengambil data pejabat");
-        }
-
-        const data = result.data;
-
-        if (!data || !Array.isArray(data)) {
-            throw new Error("Data tidak valid");
-        }
-
-        let totalPejabat = 0,
-            perluNotif = 0;
-        const tbody = document.querySelector("#data-tbody");
-        tbody.innerHTML = "";
-
-        data.forEach((item) => {
-            let status = "";
-            const id = item.id;
-            const nip = item.nip;
-            const nama = item.nama;
-            const email = item.email ?? "-";
-            const pangkat = item.pangkat;
-            const lama = item.lama_pangkat;
-
-            totalPejabat++;
-
-            if (item.perlu_kenaikan) {
-                status = `<span class="bg-orange-100 text-orange-700 px-3 py-1 rounded font-semibold"><i class="fas fa-bell mr-1"></i>Perlu Notifikasi</span>`;
-                perluNotif++;
-            } else {
-                status = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded font-semibold"><i class="fas fa-check mr-1"></i>OK</span>`;
-            }
-
-            tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="p-3 text-sm">${nip}</td>
-                    <td class="p-3 text-sm">${nama}</td>
-                    <td class="p-3 text-sm">
-                        <a href="mailto:${email}" class="text-blue-600 hover:underline">${email}</a>
-                    </td>
-                    <td class="p-3 text-sm">
-                        <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
-                            <i class="fas fa-medal"></i>
-                            ${pangkat}
-                        </span>
-                    </td>
-                    <td class="p-3 text-sm">${lama}</td>
-                    <td class="p-3 text-sm">${status}</td>
-                    <td class="p-3">
-                        <button onclick="sendEmail(event, '${id}', '${nama}', '${email}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded font-semibold transition-colors inline-flex items-center gap-2 text-sm">
-                            <i class="fas fa-envelope"></i>
-                            Kirim Email
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        document.getElementById("count-total").textContent = totalPejabat;
-        document.getElementById("count-perlu-notif").textContent = perluNotif;
+        updateDisplay(); // Panggil fungsi pagination
+        updateSummary(data);
     } catch (error) {
-        console.error("Error:", error);
-        document.querySelector("#data-tbody").innerHTML = `
-                        <tr>
-                            <td colspan="7" class="text-center p-6 text-red-600">
-                                <i class="fas fa-exclamation-circle mr-2"></i>Error: ${error.message}
-                            </td>
-                        </tr>
-                    `;
+        // Jika error dari server menyatakan token tidak valid/expired (misal error 401)
+        if (
+            error.message &&
+            error.message.toLowerCase().includes("unauthenticated")
+        ) {
+            localStorage.removeItem("token");
+            window.location.replace("/");
+        } else {
+            showError(error.message);
+        }
     }
 });
 
-// Fungsi untuk mengirim email
-window.sendEmail = async function (event, id, nama, email) {
-    const token = localStorage.getItem("token");
+// 🔥 Fungsi Inti Pagination
+export function updateDisplay() {
+    // 1. Hitung titik potong array
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
 
-    if (!token) {
-        Swal.fire({
-            icon: "error",
-            title: "Token tidak ditemukan",
-            text: "Silakan login ulang!",
-        });
-        return;
+    // 2. Potong data sesuai halaman saat ini
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
+    // 3. Render tabel dengan data yang sudah dipotong
+    renderTable(paginatedData);
+
+    // 4. Render tombol navigasinya
+    renderPaginationControls(filteredData.length);
+}
+
+// 🔥 Fungsi Menggambar Tombol Navigasi dengan Styling Tailwind Modern
+function renderPaginationControls(totalItems) {
+    const container = document.getElementById("pagination-container");
+    if (!container) return;
+
+    // Pastikan container memiliki styling yang rapi
+    container.className =
+        "flex flex-wrap items-center justify-center gap-2 mt-8 mb-4";
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    let html = "";
+
+    // Cek status disabled untuk tombol navigasi
+    const isPrevDisabled = currentPage === 1;
+    const isNextDisabled = currentPage === totalPages || totalPages === 0;
+
+    // ==========================================
+    // 1. TOMBOL PREV
+    // ==========================================
+    html += `
+        <button id="btn-prev" 
+            class="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg border shadow-sm
+            ${
+                isPrevDisabled
+                    ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 active:scale-95"
+            }" 
+            ${isPrevDisabled ? "disabled" : ""}>
+            <i class="fas fa-chevron-left text-xs"></i> Sebelumnya
+        </button>
+    `;
+
+    // ==========================================
+    // 2. ANGKA HALAMAN (PAGE NUMBERS)
+    // ==========================================
+    // Bungkus angka agar rapi di layar kecil (mobile-friendly)
+    html += `<div class="flex items-center gap-1">`;
+    for (let i = 1; i <= totalPages; i++) {
+        const isActive = currentPage === i;
+        html += `
+            <button class="page-number min-w-[40px] h-9 flex items-center justify-center text-sm font-semibold transition-all duration-200 rounded-lg border shadow-sm
+                ${
+                    isActive
+                        ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-600/20" // Style saat aktif (Biru)
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 active:scale-95"
+                }" // Style normal
+                data-page="${i}">
+                ${i}
+            </button>
+        `;
+    }
+    html += `</div>`;
+
+    // ==========================================
+    // 3. TOMBOL NEXT
+    // ==========================================
+    html += `
+        <button id="btn-next" 
+            class="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg border shadow-sm
+            ${
+                isNextDisabled
+                    ? "bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 active:scale-95"
+            }" 
+            ${isNextDisabled ? "disabled" : ""}>
+            Selanjutnya <i class="fas fa-chevron-right text-xs"></i>
+        </button>
+    `;
+
+    container.innerHTML = html;
+}
+
+export function addPejabatToUI(newData) {
+    pejabatData.push(newData);
+    filteredData = [...pejabatData];
+    currentPage = 1;
+
+    updateDisplay();
+    updateSummary(pejabatData);
+}
+
+// 🔥 TAMBAHKAN FUNGSI INI UNTUK MENGHAPUS BARIS DI TABEL TANPA RELOAD
+export function removePejabatFromUI(id) {
+    // Filter/buang data yang id-nya cocok dengan yang dihapus
+    pejabatData = pejabatData.filter((pejabat) => pejabat.id != id);
+    filteredData = filteredData.filter((pejabat) => pejabat.id != id);
+
+    // Cek jika halaman saat ini jadi kosong (karena datanya dihapus semua di halaman itu)
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages; // Mundur 1 halaman
+    } else if (totalPages === 0) {
+        currentPage = 1;
     }
 
-    const btn = event.target.closest("button");
-    const originalContent = btn.innerHTML;
-    // 🔥 Confirm
-    const confirmResult = await Swal.fire({
-        title: "Kirim Email?",
-        text: `Kirim notifikasi ke email ${nama}?`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Ya, kirim!",
-        cancelButtonText: "Batal",
-        confirmButtonColor: "#2563eb",
-        cancelButtonColor: "#6b7280",
-    });
+    updateDisplay();
+    updateSummary(pejabatData);
+}
 
-    if (!confirmResult.isConfirmed) return;
+// 🔥 Setter untuk diakses dari events.js
+export function setFilteredData(data) {
+    filteredData = data;
+}
 
-    // 🔥 Loading SweetAlert
-    Swal.fire({
-        title: "Mengirim...",
-        text: "Mohon tunggu, email sedang dikirim",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => {
-            Swal.showLoading();
-        },
-    });
-    try {
-        console.log("Token:", token);
-        console.log("Mengirim email ke ID:", id);
-
-        // 🔥 Loading button
-        btn.disabled = true;
-        btn.innerHTML =
-            '<i class="fas fa-spinner fa-spin mr-2"></i>Mengirim...';
-
-        const response = await fetch(
-            `http://192.168.1.143:8000/api/pejabat/${id}/send-warning`,
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-                body: JSON.stringify({}),
-            },
-        );
-
-        const result = await response.json();
-        console.log("Response:", result);
-
-        if (response.ok) {
-            // ✅ Success SweetAlert
-            await Swal.fire({
-                icon: "success",
-                title: "Berhasil!",
-                text: result.message || "Email berhasil dikirim",
-                timer: 2000,
-                showConfirmButton: false,
-            });
-
-            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Terkirim';
-            btn.classList.add("bg-green-600", "hover:bg-green-700");
-            btn.classList.remove("bg-blue-600", "hover:bg-blue-700");
-            btn.disabled = true;
-        } else {
-            Swal.fire({
-                icon: "error",
-                title: "Gagal",
-                text: result.message || "Terjadi kesalahan",
-            });
-
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-        }
-    } catch (error) {
-        console.error("Network error:", error);
-
-        Swal.fire({
-            icon: "error",
-            title: "Error Jaringan",
-            text: error.message,
-        });
-
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
-    }
-};
+export function setCurrentPage(page) {
+    currentPage = page;
+}

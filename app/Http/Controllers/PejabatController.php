@@ -84,29 +84,86 @@ class PejabatController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            // Menggunakan min:18 untuk minimal 18 karakter (tipe string)
-            // 'nip' => 'required|string|min:18|unique:pejabats,nip',
-
-            // Alternatif opsi yang lebih ketat: Wajib angka dan tepat 18 digit
+        // 1. Definisikan Aturan Validasi
+        $rules = [
             'nip' => 'required|numeric|digits:18|unique:pejabats,nip',
-            'email' => 'required|string|unique:pejabats,email',
-            'nama' => 'required|string',
-            'pangkat_sekarang' => 'required|string',
+            'email' => 'required|email|unique:pejabats,email',
+            'nama' => 'required|string|max:255',
+            'pangkat_sekarang' => 'required|string|max:100',
             'tmt_pangkat' => 'required|date',
-        ]);
+        ];
 
+        // 2. Definisikan Custom Error Messages (Pesan Error Spesifik)
+        $messages = [
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.numeric' => 'NIP harus berupa angka, tidak boleh mengandung huruf.',
+            'nip.digits' => 'NIP harus terdiri dari tepat 18 digit angka.',
+            'nip.unique' => 'NIP ini sudah terdaftar di dalam sistem.',
+            'email.required' => 'Alamat email wajib diisi.',
+            'email.email' => 'Format email tidak valid (contoh yang benar: nama@domain.com).',
+            'email.unique' => 'Email ini sudah digunakan oleh pejabat lain.',
+            'nama.required' => 'Nama pejabat wajib diisi.',
+            'nama.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+            'pangkat_sekarang.required' => 'Pangkat saat ini wajib diisi.',
+            'tmt_pangkat.required' => 'TMT Pangkat wajib diisi.',
+            'tmt_pangkat.date' => 'Format tanggal TMT Pangkat tidak valid.',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        // 3. Respon Jika Validasi Gagal (Error 422 Unprocessable Entity)
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan pada data yang diinput. Silakan periksa kembali.',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        $pejabat = Pejabat::create($request->all());
+        // 4. Proses Simpan Data dengan Try-Catch
+        try {
+            // Simpan data ke database
+            $pejabat = Pejabat::create($request->all());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Data Pejabat berhasil ditambahkan',
-            'data' => $pejabat
-        ], 201);
+            // 🔥 FORMAT ULANG DATA AGAR MIRIP DENGAN RESPONSE INDEX 🔥
+            $tmt = Carbon::parse($pejabat->tmt_pangkat);
+            $sekarang = Carbon::now();
+            $diff = $tmt->diff($sekarang);
+
+            $tahun = $diff->y;
+            $bulan = $diff->m;
+            $hari = $diff->d;
+
+            $lamapangkat = "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
+
+            $formattedData = [
+                'id' => $pejabat->id,
+                'nip' => $pejabat->nip,
+                'nama' => $pejabat->nama,
+                'email' => $pejabat->email,
+                'pangkat' => $pejabat->pangkat_sekarang,
+                'tmt' => $pejabat->tmt_pangkat,
+                'lama_pangkat' => $lamapangkat,
+                'rundown' => $pejabat->rundown ?? 0, // Mengatasi jika nilai default rundown tidak ada
+                'perlu_kenaikan' => $tahun >= 4,
+                'pesan' => $tahun >= 4 ? "Bersiap untuk kenaikan Pangkat!" : "Masa Pangkat aman."
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Pejabat berhasil ditambahkan.',
+                'data' => $formattedData // Mengirimkan data yang sudah diformat
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error store data pejabat: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menyimpan data ke database.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
