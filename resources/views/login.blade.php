@@ -79,13 +79,7 @@
                             </button>
                         </div>
 
-                        {{-- Button Lupa Password --}}
-                        <div class="justify-end flex ">
-
-                            <a href="/forgot-password" class="text-primary hover:text-blue-500 text-md font-medium">
-                                Lupa Kata Sandi?
-                            </a>
-                        </div>
+                       
 
                         {{-- Button Masuk --}}
                         <button type="submit"

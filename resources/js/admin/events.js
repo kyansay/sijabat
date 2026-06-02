@@ -169,7 +169,8 @@ async function handleSendEmail(btn, id, nama) {
     }
 }
 
-async function handleTambahPejabat() {
+// Tambahkan parameter dataAwal dengan nilai default object kosong
+async function handleTambahPejabat(dataAwal = {}) {
     const { value: formValues } = await Swal.fire({
         title: "Tambah Pejabat",
         width: 600,
@@ -185,13 +186,14 @@ async function handleTambahPejabat() {
                 "bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold",
         },
         focusConfirm: false,
+        // Masukkan dataAwal ke atribut 'value' pada masing-masing input
         html: `
             <div class="space-y-4 text-left">
                 <div>
                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
                         <i class="fas fa-id-card"></i> NIP
                     </label>
-                    <input id="swal-nip" 
+                    <input id="swal-nip" value="${dataAwal.nip || ''}"
                         class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         placeholder="Masukkan NIP">
                 </div>
@@ -199,7 +201,7 @@ async function handleTambahPejabat() {
                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
                         <i class="fas fa-user"></i> Nama
                     </label>
-                    <input id="swal-nama" 
+                    <input id="swal-nama" value="${dataAwal.nama || ''}"
                         class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         placeholder="Masukkan Nama">
                 </div>
@@ -207,7 +209,7 @@ async function handleTambahPejabat() {
                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
                         <i class="fas fa-envelope"></i> Email
                     </label>
-                    <input id="swal-email" type="email"
+                    <input id="swal-email" type="email" value="${dataAwal.email || ''}"
                         class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         placeholder="Masukkan Email">
                 </div>
@@ -215,7 +217,7 @@ async function handleTambahPejabat() {
                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
                         <i class="fas fa-medal"></i> Pangkat
                     </label>
-                    <input id="swal-pangkat" 
+                    <input id="swal-pangkat" value="${dataAwal.pangkat_sekarang || ''}"
                         class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         placeholder="Contoh: IV/a">
                 </div>
@@ -223,7 +225,7 @@ async function handleTambahPejabat() {
                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
                         <i class="fas fa-calendar"></i> TMT
                     </label>
-                    <input id="swal-tmt" type="date"
+                    <input id="swal-tmt" type="date" value="${dataAwal.tmt_pangkat || ''}"
                         class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
             </div>
@@ -232,12 +234,9 @@ async function handleTambahPejabat() {
             const nip = document.getElementById("swal-nip").value.trim();
             const nama = document.getElementById("swal-nama").value.trim();
             const email = document.getElementById("swal-email").value.trim();
-            const pangkat = document
-                .getElementById("swal-pangkat")
-                .value.trim();
+            const pangkat = document.getElementById("swal-pangkat").value.trim();
             const tmt = document.getElementById("swal-tmt").value;
 
-            // 🔥 VALIDASI DALAM MODAL (tidak keluar popup baru)
             if (!nip || !nama) {
                 Swal.showValidationMessage("NIP dan Nama wajib diisi");
                 return false;
@@ -266,7 +265,6 @@ async function handleTambahPejabat() {
 
         const result = await createPejabat(formValues, token);
 
-        // 🔥 TAMBAHKAN KE UI TANPA RELOAD
         addPejabatToUI(result.data);
 
         await Swal.fire({
@@ -277,19 +275,15 @@ async function handleTambahPejabat() {
             showConfirmButton: false,
         });
     } catch (error) {
-        // 1. Ambil pesan utama dari API, atau gunakan pesan default
         let titleMessage = error.message || "Gagal Menyimpan";
         let htmlErrorMessage = "Terjadi kesalahan yang tidak diketahui.";
 
-        // 2. Jika ada detail error dari Laravel (error.errors)
         if (error.errors) {
-            // Ubah object error menjadi elemen <li> html
             const errorList = Object.values(error.errors)
                 .flat()
                 .map((msg) => `<li class="text-red-500 mb-1">${msg}</li>`)
                 .join("");
 
-            // Bungkus ke dalam <ul> dengan styling Tailwind
             htmlErrorMessage = `
                 <ul class="text-left list-disc pl-5 text-sm">
                     ${errorList}
@@ -297,19 +291,22 @@ async function handleTambahPejabat() {
             `;
         }
 
-        // 3. Tampilkan di SweetAlert
+        // Tampilkan error dan kembalikan ke form jika diklik
         Swal.fire({
             icon: "error",
             title: titleMessage,
             html: htmlErrorMessage,
-            confirmButtonColor: "#3b82f6", // Warna biru Tailwind (blue-500)
+            confirmButtonText: "Kembali ke Form",
+            confirmButtonColor: "#3b82f6",
             customClass: {
                 popup: "rounded-2xl",
             },
+        }).then(() => {
+            // Panggil kembali fungsinya dan masukkan data yang sudah diketik sebelumnya
+            handleTambahPejabat(formValues);
         });
     }
 }
-
 // 🔥 UBAH NAMA FUNGSI JADI handleDeletePejabat (agar tidak bentrok dengan fungsi dari api.js)
 async function handleDeletePejabat(btn, id) {
     const token = localStorage.getItem("token");

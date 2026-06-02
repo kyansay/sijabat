@@ -1,0 +1,38 @@
+name: Deploy to cPanel via FTP
+
+on:
+  push:
+    branches:
+      - main # Sesuaikan jika branch utama Anda bukan 'main'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🚚 Mengambil kode terbaru
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Vite optimal di Node 18/20
+          
+      # Tambahkan step ini untuk mengaktifkan compatibility mode ke Node 24
+      - name: Force Node 24 for Actions
+        run: echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true" >> $GITHUB_ENV
+
+      - name: 📦 Install dependencies & Build
+        run: |
+          npm install
+          npm run build
+
+      - name: 🚀 Upload ke cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./ # Sesuaikan dengan direktori tujuan di cPanel
+          protocol: ftps
